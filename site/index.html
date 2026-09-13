@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08111f">
+  <meta name="description" content="OpenBell — fair execution for 24/7 tokenized stocks on Solana.">
+  <title>OpenBell · Fair execution for tokenized stocks</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%2308111f'/%3E%3Cpath d='M18 43V25l14-8 14 8v18l-14 8-14-8Z' fill='none' stroke='%237ce7c2' stroke-width='4'/%3E%3Cpath d='M25 32h14M32 25v14' stroke='%23ffcf70' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="OpenBell home"><span class="brand-mark">⌁</span><span>openbell</span></a>
+      <div class="topbar-right"><span class="network-dot"></span><span>Solana · prototype</span><button id="connectBtn" class="button button-outline">Connect wallet</button></div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">MARKET INTEGRITY LAYER</p>
+          <h1>Trade the token.<br><em>Respect the market.</em></h1>
+          <p class="hero-sub">Solana can trade tokenized stocks 24/7. OpenBell makes sure “executable” does not quietly become “unfair”.</p>
+          <div class="hero-actions"><button id="judgeBtn" class="button button-primary">Run judge demo <span>↗</span></button><a class="text-link" href="#receipt">View evidence model</a></div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-card-top"><span>LIVE EXECUTION GATE</span><span class="pill pill-open">MONITORING</span></div>
+          <div class="signal-row"><div><span class="muted">Selected asset</span><strong id="heroAsset">AAPLx</strong></div><div class="signal-price"><span class="muted">Reference</span><strong id="heroRef">$210.00</strong></div></div>
+          <div class="range"><div class="range-label"><span>Executable quote</span><strong id="heroQuote">$210.55</strong></div><div class="range-track"><span id="rangeFill" style="width: 24%"></span><i id="rangeMarker" style="left: 24%"></i></div><div class="range-label small"><span>Fair corridor</span><span id="heroPremium">+26 bps</span></div></div>
+          <div class="hero-decision"><span class="status-dot status-verified"></span><span id="heroDecision">VERIFIED</span><span class="decision-caption">fair enough to execute</span></div>
+        </div>
+      </section>
+
+      <section class="metrics" aria-label="OpenBell metrics"><div><strong>24/7</strong><span>token market access</span></div><div><strong>3</strong><span>decision states</span></div><div><strong>1</strong><span>independent receipt</span></div><div><strong>0</strong><span>blank-cheque trades</span></div></section>
+
+      <section class="workspace">
+        <div class="section-heading"><div><p class="eyebrow">THE EXECUTION CONSOLE</p><h2>One decision before every order.</h2></div><div class="market-chip"><span class="network-dot"></span><span id="marketState">Underlying market closed</span></div></div>
+        <div class="console-grid">
+          <aside class="panel policy-panel"><div class="panel-heading"><div><span class="panel-kicker">01 · POLICY</span><h3>Your guardrails</h3></div><span class="settings-icon">⚙</span></div><p class="panel-note">Adjust the policy. The same quote will be re-evaluated instantly.</p><label>Max off-hours premium <output id="premiumOut">50 bps</output><input id="premiumRange" type="range" min="10" max="500" value="50" step="10"></label><label>Minimum liquidity <output id="liquidityOut">$10k</output><input id="liquidityRange" type="range" min="1000" max="100000" value="10000" step="1000"></label><label>Max order size <output>$100</output><input type="range" min="20" max="500" value="100" disabled></label><div class="policy-lock"><span>✓</span><span>Signed policy boundary<br><small>Wallet-bound · v1.0</small></span></div></aside>
+          <div class="panel quote-panel"><div class="panel-heading"><div><span class="panel-kicker">02 · OBSERVATION</span><h3>Is this quote fair?</h3></div><span class="fresh-badge">● 1.4s fresh</span></div><div class="asset-selector"><button class="asset active" data-asset="verified"><span class="asset-logo">A</span><span><strong>AAPLx</strong><small>Apple · tokenized equity</small></span><span class="asset-price">$210.55</span></button><button class="asset" data-asset="blocked"><span class="asset-logo tsla">T</span><span><strong>TSLAx</strong><small>Tesla · tokenized equity</small></span><span class="asset-price">$361.20</span></button><button class="asset" data-asset="frozen"><span class="asset-logo nvda">N</span><span><strong>NVDAx</strong><small>NVIDIA · tokenized equity</small></span><span class="asset-price">$178.20</span></button></div><div class="quote-table"><div><span>Reference price</span><strong id="refPrice">$210.00</strong></div><div><span>Executable quote</span><strong id="execPrice">$210.55</strong></div><div><span>Premium / discount</span><strong id="premiumValue" class="positive">+26 bps</strong></div><div><span>Liquidity available</span><strong id="liquidityValue">$250,000</strong></div></div><div class="route-line"><span>↳</span><span>Route checked</span><strong>Jupiter → Solana</strong></div></div>
+          <div class="panel decision-panel"><div class="panel-heading"><div><span class="panel-kicker">03 · DECISION</span><h3>Execution gate</h3></div><span id="decisionTime" class="muted">just now</span></div><div id="decisionCard" class="decision-card verified"><div class="big-status"><span id="decisionIcon">✓</span><div><strong id="decisionTitle">VERIFIED</strong><span id="decisionSubtitle">Quote is inside your fair-execution policy.</span></div></div><div id="reasonList" class="reason-list"><div><span>✓</span><span>Premium within <b>50 bps</b> policy</span></div><div><span>✓</span><span>Liquidity is healthy</span></div><div><span>✓</span><span>Quote freshness is <b>1.4s</b></span></div></div><button id="executeBtn" class="button button-primary full">Execute protected order</button></div></div>
+        </div>
+      </section>
+
+      <section class="judge-section"><div class="judge-header"><div><p class="eyebrow">JUDGE MODE</p><h2>See every outcome, honestly.</h2><p>One click runs the same verifier through a fair quote, an off-hours premium, and a corporate-action transition.</p></div><div class="run-progress"><div class="progress-track"><span id="progressFill"></span></div><span id="progressLabel">Ready to run</span></div></div><div id="timeline" class="timeline"><div class="timeline-step active"><span>01</span><strong>VERIFIED</strong><small>fair quote</small></div><div class="timeline-line"></div><div class="timeline-step"><span>02</span><strong>BLOCKED</strong><small>premium exceeded</small></div><div class="timeline-line"></div><div class="timeline-step"><span>03</span><strong>FROZEN</strong><small>corporate action</small></div></div></section>
+
+      <section id="receipt" class="receipt-section"><div class="section-heading"><div><p class="eyebrow">PORTABLE EVIDENCE</p><h2>A receipt anyone can verify.</h2><p class="section-sub">No “trust me”. The decision is a hashable record of the asset, quote, policy, and checks.</p></div><button id="verifyBtn" class="button button-outline">Verify latest receipt</button></div><div class="receipt-grid"><div class="receipt-summary"><div class="receipt-top"><span class="receipt-check">✓</span><div><span class="muted">LATEST RECEIPT</span><strong id="receiptDecision">VERIFIED · AAPLx</strong></div><span id="receiptTime" class="muted">02:00 UTC</span></div><div class="hash-line"><span>evidence hash</span><code id="evidenceHash">waiting for run…</code><button id="copyHash" title="Copy hash">⧉</button></div><div class="receipt-details"><div><span>Mint</span><strong id="receiptMint">AAPLx-mainnet-mint</strong></div><div><span>Market state</span><strong id="receiptMarket">UNDERLYING_MARKET_CLOSED</strong></div><div><span>Route</span><strong id="receiptRoute">Jupiter → Solana settlement</strong></div><div><span>Verifier</span><strong>OpenBell v1.0 · independent</strong></div></div></div><pre id="rawReceipt" class="raw-receipt" aria-label="Raw receipt JSON">Run the judge demo to generate a portable receipt.</pre></div></section>
+    </main>
+    <footer><span>openbell · fair execution for tokenized stocks</span><span>Built for Solana · no keys stored · demo uses reproducible fixtures</span></footer>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

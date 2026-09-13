@@ -1,0 +1,5 @@
+{
+  "schema": "openbell.receipt.v1",
+  "note": "Deterministic judge fixtures. Replace quote and transaction fields with live adapter output for production use.",
+  "scenarios": ["verified", "blocked", "frozen", "scaledMismatch"]
+}

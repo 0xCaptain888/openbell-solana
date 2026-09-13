@@ -1,0 +1,34 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { DECISIONS, demoFixtures, evaluateExecution, hashEvidence } from '../src/openbell.mjs';
+
+test('fair off-hours quote is VERIFIED', () => {
+  const receipt = evaluateExecution(demoFixtures.verified);
+  assert.equal(receipt.decision, DECISIONS.VERIFIED);
+  assert.equal(receipt.premiumBps, 26);
+  assert.equal(receipt.checks.quoteFresh, true);
+  assert.match(receipt.evidenceHash, /^[a-f0-9]{64}$/);
+});
+
+test('off-hours premium is BLOCKED before settlement', () => {
+  const receipt = evaluateExecution(demoFixtures.blocked);
+  assert.equal(receipt.decision, DECISIONS.BLOCKED);
+  assert.ok(receipt.reasons.includes('off_hours_premium_exceeded'));
+});
+
+test('corporate action transition is FROZEN even when quote is fair', () => {
+  const receipt = evaluateExecution(demoFixtures.frozen);
+  assert.equal(receipt.decision, DECISIONS.FROZEN);
+  assert.deepEqual(receipt.reasons, ['corporate_action_transition']);
+});
+
+test('scaled UI amount cannot be used as raw transfer amount', () => {
+  const receipt = evaluateExecution(demoFixtures.scaledMismatch);
+  assert.equal(receipt.decision, DECISIONS.BLOCKED);
+  assert.ok(receipt.reasons.includes('scaled_amount_used_as_raw_amount'));
+  assert.equal(receipt.expectedRawAmount, 10);
+});
+
+test('evidence hash is deterministic', () => {
+  assert.equal(hashEvidence({ b: 2, a: 1 }), hashEvidence({ a: 1, b: 2 }));
+});
