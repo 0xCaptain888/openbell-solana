@@ -89,6 +89,8 @@ not a claim that the Devnet plumbing proof traded a real equity token.
 `QUOTED`, `NO_ROUTE`, or `UNAVAILABLE` rather than manufacturing a price when
 the provider or route is unavailable. A Jupiter API key, when required by the
 provider, is read only from `JUPITER_API_KEY` and is never written to the repo.
+For local repeatability, place it in the ignored `.env.local` file; the npm
+script loads that file automatically. Use `.env.local.example` as the template.
 
 The repository includes one read-only `QUOTED` observation in
 `evidence/mainnet-aaplx-jupiter-quote.json`: SOL → AAPLx, one route, zero
