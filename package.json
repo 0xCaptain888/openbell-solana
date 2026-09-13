@@ -1,11 +1,22 @@
 {
   "name": "openbell-solana",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "description": "Market-hours-aware fair execution for 24/7 tokenized stock markets on Solana.",
   "type": "module",
+  "exports": {
+    ".": "./src/sdk.mjs",
+    "./policy": "./src/policy.mjs",
+    "./store": "./src/task-store.mjs",
+    "./notifications": "./src/notifications.mjs",
+    "./verifier": "./src/openbell.mjs",
+    "./transaction-proof": "./src/transaction-proof.mjs"
+  },
   "scripts": {
     "demo": "node src/demo.mjs",
+    "sdk:demo": "node scripts/sdk-demo.mjs",
+    "api": "node --env-file-if-exists=.env.local scripts/api-server.mjs",
+    "api:smoke": "node scripts/api-smoke.mjs",
     "test": "node --test test/*.test.mjs",
     "check": "npm test",
     "devnet:check": "node scripts/check-devnet.mjs",

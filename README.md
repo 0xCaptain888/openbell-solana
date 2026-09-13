@@ -24,7 +24,18 @@ OpenBell protects users and trading agents from stale prices, thin liquidity, of
 ```bash
 npm test
 npm run demo
+npm run sdk:demo
 ```
+
+## Integrate OpenBell
+
+OpenBell v0.2 exposes an embeddable SDK, Ed25519-signed policy envelopes, pluggable task stores, persistent audit history, an optional HMAC-signed Webhook notifier, and a local REST API:
+
+```bash
+OPENBELL_POLICY_MODE=development npm run api
+```
+
+Development mode is limited to local evaluation. The API defaults to strict mode, where policies must be signed by a configured trusted public key. The default durable store is `.openbell/tasks.json`; it is appropriate for local evaluation and persistent single-server deployments. The public Vercel Demo remains intentionally stateless because serverless filesystems are ephemeral. See [`docs/integration.md`](docs/integration.md) for the SDK example, API routes, permission model, production database boundary, and notification configuration.
 
 To verify the funded Devnet wallet without exposing credentials in the repository:
 
@@ -137,7 +148,13 @@ The core engine has no runtime dependencies and is deterministic. `src/openbell.
 ## Repository map
 
 - `src/openbell.mjs` — verifier, decision states, deterministic evidence receipt
+- `src/sdk.mjs` — embeddable task lifecycle SDK and fail-closed settlement gate
+- `src/policy.mjs` — Ed25519 policy signing, verification, and scoped permissions
+- `src/task-store.mjs` — memory and atomic JSON persistence adapters
+- `src/notifications.mjs` — notification center and HMAC-signed Webhook adapter
 - `src/demo.mjs` — CLI judge fixtures
+- `scripts/api-server.mjs` — local persistent REST service
 - `site/` — evaluator-facing browser demo
 - `test/` — verified, blocked, frozen, and raw/scaled regression tests
 - `docs/architecture.md` — one-page architecture
+- `docs/integration.md` — SDK/API integration and operations guide
