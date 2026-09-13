@@ -1,0 +1,21 @@
+{
+  "proofVersion": "openbell.devnet-plumbing.v1",
+  "scope": "devnet_self_transfer",
+  "network": "solana-devnet",
+  "walletAddress": "2oWxc6Tw4tYukaYoFVPzEB3D7LK95ccFQmNwALuoPgSm",
+  "recipientAddress": "2oWxc6Tw4tYukaYoFVPzEB3D7LK95ccFQmNwALuoPgSm",
+  "lamports": 1000000,
+  "sol": 0.001,
+  "signature": "3PFgzjhXQzRm8BUutRgJqarqBCKkFpFYkfXPckFuctCfKy5zQTB5JeyVCzUu6Vqfm3oH8g8HaUUDp75iZAfLPGi1",
+  "explorer": "https://explorer.solana.com/tx/3PFgzjhXQzRm8BUutRgJqarqBCKkFpFYkfXPckFuctCfKy5zQTB5JeyVCzUu6Vqfm3oH8g8HaUUDp75iZAfLPGi1?cluster=devnet",
+  "proof": {
+    "signature": "3PFgzjhXQzRm8BUutRgJqarqBCKkFpFYkfXPckFuctCfKy5zQTB5JeyVCzUu6Vqfm3oH8g8HaUUDp75iZAfLPGi1",
+    "found": true,
+    "slot": 497574465,
+    "blockTime": 1789279701,
+    "success": true,
+    "feeLamports": 5000,
+    "logCount": 2
+  },
+  "warning": "This proves Solana signing, broadcast, and independent verification only; it is not a tokenized-stock trade."
+}

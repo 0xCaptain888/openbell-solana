@@ -14,6 +14,8 @@ OpenBell protects users and trading agents from stale prices, thin liquidity, of
 4. Change **Max premium** and **Min liquidity** to see the decision change.
 5. Expand the receipt and click **Verify evidence**.
 6. Inspect the raw/scaled amount guard in the fourth scenario.
+7. Click **Verify Devnet proof** to independently check the committed Solana transaction evidence.
+8. Select `FROZEN` in Judge Mode and use the recovery controls to re-verify or cancel without signing.
 
 ## Local verification
 
@@ -121,6 +123,7 @@ The core engine has no runtime dependencies and is deterministic. `src/openbell.
 
 - The decision engine, receipts, evidence hashes, market-state transitions, raw/scaled amount checks, and test matrix are implemented.
 - The public demo uses deterministic fixtures so judges can reproduce every state without wallet credentials.
+- The browser also exposes a read-only Devnet proof verifier; it checks the committed signature, success flag, and explorer link without broadcasting anything.
 - A production adapter must provide live issuer/mint metadata, oracle/reference prices, DEX/RFQ quotes, and Solana transaction signatures.
 - Tokenized-stock availability and eligibility vary by jurisdiction and issuer. This prototype does not bypass KYC, transfer controls, or regional restrictions.
 
