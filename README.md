@@ -20,6 +20,16 @@ npm test
 npm run demo
 ```
 
+To verify the funded Devnet wallet without exposing credentials in the repository:
+
+```bash
+OPENBELL_SOLANA_RPC_URL="<your Alchemy Devnet endpoint>" \
+OPENBELL_WALLET_ADDRESS="2oWxc6Tw4tYukaYoFVPzEB3D7LK95ccFQmNwALuoPgSm" \
+npm run devnet:check
+```
+
+The endpoint is read only from the process environment. Never commit it to `.env`, source code, screenshots, or the public repository.
+
 The core engine has no runtime dependencies and is deterministic. `src/openbell.mjs` is designed so a live Solana adapter can replace the fixture quote/reference adapters without changing the verifier contract.
 
 ## What is real vs. demo-scoped

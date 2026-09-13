@@ -8,6 +8,7 @@
     "demo": "node src/demo.mjs",
     "test": "node --test test/*.test.mjs",
     "check": "npm test",
+    "devnet:check": "node scripts/check-devnet.mjs",
     "serve": "node scripts/serve.mjs"
   },
   "engines": { "node": ">=20" },
