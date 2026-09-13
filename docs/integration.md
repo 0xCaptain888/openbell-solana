@@ -1,6 +1,6 @@
 # OpenBell SDK and API integration
 
-OpenBell v0.2 turns the verifier prototype into an embeddable execution-control layer. The SDK remains fail-closed: a task cannot reach `SETTLED` unless a valid Ed25519 policy authorizes settlement, the quote reaches `VERIFIED`, and a successful transaction proof is attached.
+OpenBell v0.3 turns the verifier prototype into an embeddable execution-control layer. The SDK remains fail-closed: a task cannot reach `SETTLED` unless a valid Ed25519 policy authorizes settlement, the quote reaches `VERIFIED`, and a successful transaction proof is attached.
 
 ## SDK quick start
 
@@ -83,6 +83,40 @@ GET  /v1/notifications
 ```
 
 `JsonFileTaskStore` is durable for one local process or a persistent server volume. Vercel function filesystems are ephemeral, so a production deployment should implement the same store interface with Postgres, SQLite on a persistent volume, or another transactional database. The public Vercel Demo does not pretend to provide durable server-side storage.
+
+## Serverless remote persistence
+
+`RedisRestTaskStore` implements the same store interface using an Upstash-compatible Redis REST API. It stores tasks by ID, atomically updates the task index through `/multi-exec`, and keeps the latest 1,000 notification outbox records. Configure the Vercel deployment with either the OpenBell-specific names or common Redis/KV REST aliases:
+
+```text
+OPENBELL_REDIS_REST_URL=<server-side REST endpoint>
+OPENBELL_REDIS_REST_TOKEN=<server-side REST token>
+OPENBELL_REDIS_NAMESPACE=openbell:v1
+OPENBELL_API_BEARER_TOKEN=<long random operator token>
+OPENBELL_TRUSTED_POLICY_KEYS_JSON=["<PEM public key>"]
+OPENBELL_POLICY_MODE=strict
+```
+
+The public configuration probe contains no secret and performs no write:
+
+```text
+GET /api/openbell?action=status
+```
+
+Task operations use the same endpoint and require `Authorization: Bearer <OPENBELL_API_BEARER_TOKEN>`:
+
+```text
+GET  /api/openbell?action=tasks
+GET  /api/openbell?action=task&taskId=<id>
+GET  /api/openbell?action=notifications&limit=100
+POST /api/openbell?action=create
+POST /api/openbell?action=evaluate&taskId=<id>
+POST /api/openbell?action=recover&taskId=<id>
+POST /api/openbell?action=cancel&taskId=<id>
+POST /api/openbell?action=settle&taskId=<id>
+```
+
+If remote storage is absent, task operations return `503 PERSISTENCE_NOT_CONFIGURED`. If the operator bearer token is absent, they return `503 WRITE_AUTH_NOT_CONFIGURED`. A wrong token returns `401 UNAUTHORIZED`. No endpoint silently falls back to process memory or the Vercel filesystem.
 
 ## Notifications and operations
 

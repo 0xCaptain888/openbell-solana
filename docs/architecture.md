@@ -22,14 +22,17 @@ The protocol separates **market observability** from **execution authority**. An
 ```mermaid
 flowchart TB
   APP[Wallet / Agent / Trading App] --> SDK[OpenBell SDK]
-  API[REST API] --> SDK
+  API[Authenticated Vercel Task API] --> SDK
   SDK --> AUTH[Ed25519 Policy Authorization]
   AUTH --> ENGINE[Fair Execution Engine]
-  ENGINE --> STORE[Task Store Adapter]
+  ENGINE --> STORE[Local JSON or Redis REST Store]
   ENGINE --> OUTBOX[Persistent Notification Outbox]
   OUTBOX --> WEBHOOK[HMAC-signed Webhook]
   ENGINE --> PROOF[Independent Transaction Proof]
   PROOF --> SETTLED[SETTLED]
+  UI[Judge Replay UI] --> LOCAL[Browser-local Replay State]
+  UI --> STATUS[Public Configuration Probe]
+  STATUS --> API
 ```
 
-The repository includes an in-memory adapter and an atomic JSON file adapter. The JSON adapter is durable on a local machine or persistent server volume. Serverless filesystems such as Vercel functions are ephemeral; production deployments should provide a transactional store implementing the same interface rather than claiming filesystem persistence.
+The repository includes in-memory, atomic JSON file, and Upstash-compatible Redis REST adapters. The browser replay is explicitly device-local and contains no signing keys. Anonymous visitors can read only the serverless API's secret-free configuration status; every task operation requires durable remote storage, operator bearer authorization, and a policy signed by the configured trust root. Missing infrastructure produces an explicit `503` instead of an in-memory or ephemeral-filesystem fallback.

@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 const root = join(fileURLToPath(new URL('..', import.meta.url)), 'site');
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
 const server = createServer(async (req, res) => {
-  const requested = normalize(req.url === '/' ? '/index.html' : req.url).replace(/^\.\.(\/|\\)/, '');
+  const pathname = new URL(req.url, 'http://localhost').pathname;
+  const requested = normalize(pathname === '/' ? '/index.html' : pathname).replace(/^\.\.(\/|\\)/, '');
   try {
     const body = await readFile(join(root, requested));
     res.writeHead(200, { 'Content-Type': types[extname(requested)] ?? 'application/octet-stream' });

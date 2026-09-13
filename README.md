@@ -17,7 +17,9 @@ OpenBell protects users and trading agents from stale prices, thin liquidity, of
 7. Click **Verify Devnet proof** to independently check the committed Solana transaction evidence.
 8. Select `FROZEN` in Judge Mode and use the recovery controls to re-verify or cancel without signing.
 9. Switch between **Strict**, **Balanced**, and **Flexible** policy presets to show that the same quote can produce a different decision under a user-owned policy.
-10. Review the local **Audit Activity** trail and download the latest portable receipt as JSON.
+10. Refresh the page and confirm the browser-local policy, latest task, receipt, wallet replay state, and audit trail are restored.
+11. Open **Integration Status** and click **Check deployment**. The public API reports its real configuration state; without a remote store it says `PERSISTENCE_NOT_CONFIGURED` instead of pretending that Vercel's ephemeral filesystem is durable.
+12. Download the latest portable receipt as JSON.
 
 ## Local verification
 
@@ -29,13 +31,13 @@ npm run sdk:demo
 
 ## Integrate OpenBell
 
-OpenBell v0.2 exposes an embeddable SDK, Ed25519-signed policy envelopes, pluggable task stores, persistent audit history, an optional HMAC-signed Webhook notifier, and a local REST API:
+OpenBell v0.3 exposes an embeddable SDK, Ed25519-signed policy envelopes, pluggable task stores, persistent audit history, an optional HMAC-signed Webhook notifier, a local REST API, and a fail-closed Vercel task API:
 
 ```bash
 OPENBELL_POLICY_MODE=development npm run api
 ```
 
-Development mode is limited to local evaluation. The API defaults to strict mode, where policies must be signed by a configured trusted public key. The default durable store is `.openbell/tasks.json`; it is appropriate for local evaluation and persistent single-server deployments. The public Vercel Demo remains intentionally stateless because serverless filesystems are ephemeral. See [`docs/integration.md`](docs/integration.md) for the SDK example, API routes, permission model, production database boundary, and notification configuration.
+Development mode is limited to local evaluation. The API defaults to strict mode, where policies must be signed by a configured trusted public key. The default local durable store is `.openbell/tasks.json`; it is appropriate for local evaluation and persistent single-server deployments. The browser replay now uses clearly labeled device-local persistence. The Vercel task function supports a Redis REST store, but remains fail-closed until remote persistence, write authorization, and trusted policy keys are configured. See [`docs/integration.md`](docs/integration.md) for the SDK example, API routes, permission model, production database boundary, and notification configuration.
 
 To verify the funded Devnet wallet without exposing credentials in the repository:
 
@@ -132,12 +134,20 @@ function configuration for a Vercel deployment.
 
 The core engine has no runtime dependencies and is deterministic. `src/openbell.mjs` is designed so a live Solana adapter can replace the fixture quote/reference adapters without changing the verifier contract.
 
+### Optional persistent Vercel task API
+
+`GET /api/openbell?action=status` is public and returns configuration metadata only. All task and notification reads/writes require a server-side bearer token. The endpoint refuses task operations until a remote Redis REST store is configured, and strict mode rejects policies that are not signed by a configured trusted key.
+
+Supported actions are `tasks`, `task`, `notifications`, `create`, `evaluate`, `recover`, `cancel`, and `settle`. Secrets are server-side environment variables only; the public browser never receives the database token, API bearer token, trusted signer configuration, or notification secret. Exact setup and request examples are in [`docs/integration.md`](docs/integration.md).
+
 ## What is real vs. demo-scoped
 
 - The decision engine, receipts, evidence hashes, market-state transitions, raw/scaled amount checks, and test matrix are implemented.
 - The public demo uses deterministic fixtures so judges can reproduce every state without wallet credentials.
 - The browser also exposes a read-only Devnet proof verifier; it checks the committed signature, success flag, and explorer link without broadcasting anything.
 - The evaluator console records a local activity trail and exports the current receipt; neither feature uploads user data or stores signing credentials.
+- Browser-local persistence is explicitly labeled and survives refresh on the same device. It is not claimed as shared cloud persistence.
+- The deployed task API exposes a public configuration check while task operations remain fail-closed behind remote storage, bearer authorization, and trusted policy signer configuration.
 - A production adapter must provide live issuer/mint metadata, oracle/reference prices, DEX/RFQ quotes, and Solana transaction signatures.
 - Tokenized-stock availability and eligibility vary by jurisdiction and issuer. This prototype does not bypass KYC, transfer controls, or regional restrictions.
 
@@ -151,9 +161,11 @@ The core engine has no runtime dependencies and is deterministic. `src/openbell.
 - `src/sdk.mjs` — embeddable task lifecycle SDK and fail-closed settlement gate
 - `src/policy.mjs` — Ed25519 policy signing, verification, and scoped permissions
 - `src/task-store.mjs` — memory and atomic JSON persistence adapters
+- `src/redis-rest-task-store.mjs` — remote Redis REST persistence adapter for serverless deployments
 - `src/notifications.mjs` — notification center and HMAC-signed Webhook adapter
 - `src/demo.mjs` — CLI judge fixtures
 - `scripts/api-server.mjs` — local persistent REST service
+- `api/openbell.mjs` — fail-closed Vercel task API and public deployment-status endpoint
 - `site/` — evaluator-facing browser demo
 - `test/` — verified, blocked, frozen, and raw/scaled regression tests
 - `docs/architecture.md` — one-page architecture

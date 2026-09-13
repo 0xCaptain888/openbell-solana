@@ -1,6 +1,6 @@
 {
   "name": "openbell-solana",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": false,
   "description": "Market-hours-aware fair execution for 24/7 tokenized stock markets on Solana.",
   "type": "module",
@@ -8,6 +8,7 @@
     ".": "./src/sdk.mjs",
     "./policy": "./src/policy.mjs",
     "./store": "./src/task-store.mjs",
+    "./redis-rest-store": "./src/redis-rest-task-store.mjs",
     "./notifications": "./src/notifications.mjs",
     "./verifier": "./src/openbell.mjs",
     "./transaction-proof": "./src/transaction-proof.mjs"
