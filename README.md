@@ -2,6 +2,8 @@
 
 **Fair execution for 24/7 tokenized stock markets on Solana.**
 
+> **Live Demo:** [openbell-solana-live.vercel.app](https://openbell-solana-live.vercel.app/) · **Repository:** [github.com/0xCaptain888/openbell-solana](https://github.com/0xCaptain888/openbell-solana)
+
 OpenBell protects users and trading agents from stale prices, thin liquidity, off-hours premiums, and Token-2022 raw/scaled amount mistakes. Solana makes tokenized equities composable and continuously tradeable; OpenBell answers the missing question before every order: **is this quote fair enough to execute now?**
 
 ## The 3-minute judge path
