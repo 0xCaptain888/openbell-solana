@@ -8,6 +8,7 @@
   <title>OpenBell · Fair execution for tokenized stocks</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%2308111f'/%3E%3Cpath d='M18 43V25l14-8 14 8v18l-14 8-14-8Z' fill='none' stroke='%237ce7c2' stroke-width='4'/%3E%3Cpath d='M25 32h14M32 25v14' stroke='%23ffcf70' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./live.css">
 </head>
 <body>
   <div class="app-shell">
@@ -42,6 +43,8 @@
           <div class="panel decision-panel"><div class="panel-heading"><div><span class="panel-kicker">03 · DECISION</span><h3>Execution gate</h3></div><span id="decisionTime" class="muted">just now</span></div><div id="decisionCard" class="decision-card verified"><div class="big-status"><span id="decisionIcon">✓</span><div><strong id="decisionTitle">VERIFIED</strong><span id="decisionSubtitle">Quote is inside your fair-execution policy.</span></div></div><div id="reasonList" class="reason-list"><div><span>✓</span><span>Premium within <b>50 bps</b> policy</span></div><div><span>✓</span><span>Liquidity is healthy</span></div><div><span>✓</span><span>Quote freshness is <b>1.4s</b></span></div></div><button id="executeBtn" class="button button-primary full">Execute protected order</button></div></div>
         </div>
       </section>
+
+      <section class="live-section" aria-labelledby="live-title"><div class="live-section-head"><div><p class="eyebrow">READ-ONLY MARKET PROOF</p><h2 id="live-title">Mainnet evidence, without wallet risk.</h2><p class="section-sub">The public site loads committed proof files only. No API key lives in the browser, and no swap can be triggered here.</p></div><button id="loadLiveBtn" class="button button-outline">Load Mainnet proof</button></div><div class="live-proof-grid"><div class="live-proof-card"><span class="panel-kicker">ASSET IDENTITY</span><strong id="liveStatus">Not loaded · fixture mode</strong><span id="liveMintLabel">AAPLx Mint proof is ready to inspect</span></div><div class="live-proof-card"><span class="panel-kicker">ROUTE OBSERVATION</span><strong id="liveQuoteLabel">Jupiter quote proof is ready to inspect</strong><span>Historical observation · read-only</span></div><div class="live-proof-card"><span class="panel-kicker">SAFETY BOUNDARY</span><strong>NO MAINNET SIGNING</strong><span>Devnet proof is separate and auditable</span></div></div></section>
 
       <section class="judge-section"><div class="judge-header"><div><p class="eyebrow">JUDGE MODE</p><h2>See every outcome, honestly.</h2><p>One click runs the same verifier through a fair quote, an off-hours premium, and a corporate-action transition.</p></div><div class="run-progress"><div class="progress-track"><span id="progressFill"></span></div><span id="progressLabel">Ready to run</span></div></div><div id="timeline" class="timeline"><div class="timeline-step active"><span>01</span><strong>VERIFIED</strong><small>fair quote</small></div><div class="timeline-line"></div><div class="timeline-step"><span>02</span><strong>BLOCKED</strong><small>premium exceeded</small></div><div class="timeline-line"></div><div class="timeline-step"><span>03</span><strong>FROZEN</strong><small>corporate action</small></div></div></section>
 
