@@ -1,0 +1,29 @@
+{
+  "network": "solana-mainnet",
+  "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+  "found": true,
+  "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+  "isToken2022": true,
+  "type": "mint",
+  "decimals": 8,
+  "supply": "15376363798411",
+  "mintAuthority": "7pt9tkctJPK7PPNQJ77GKg8ZffSF6QxoMiCFYHxrtaCj",
+  "freezeAuthority": "JDq14BWvqCRFNu1krb12bcRpbGtJZ1FLEakMw6FdxJNs",
+  "tokenMetadata": {
+    "additionalMetadata": [],
+    "mint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+    "name": "Apple xStock",
+    "symbol": "AAPLx",
+    "updateAuthority": "5aMNNLQJwAEeoemTEMkv5NVjqKwvvefRYCQ5Z67HFvEq",
+    "uri": "https://xstocks-metadata.backed.fi/tokens/Solana/AAPLx/metadata.json"
+  },
+  "scaledUiAmount": {
+    "authority": "S7vYFFWH6BjJyEsdrPQpqpYTqLTrPRK6KW3VwsJuRaS",
+    "multiplier": "1.0026642075893797",
+    "newMultiplier": "1.0032690125398187",
+    "newMultiplierEffectiveTimestamp": 1786149000
+  },
+  "observedAt": "2026-09-13T06:40:21.285Z",
+  "source": "Solana Mainnet getParsedAccountInfo",
+  "warning": "Read-only observation. No mainnet transaction was signed or broadcast."
+}
