@@ -90,6 +90,11 @@ not a claim that the Devnet plumbing proof traded a real equity token.
 the provider or route is unavailable. A Jupiter API key, when required by the
 provider, is read only from `JUPITER_API_KEY` and is never written to the repo.
 
+The repository includes one read-only `QUOTED` observation in
+`evidence/mainnet-aaplx-jupiter-quote.json`: SOL → AAPLx, one route, zero
+reported price impact at the recorded context slot. It is evidence of quote
+discovery only; no swap was signed or broadcast.
+
 The core engine has no runtime dependencies and is deterministic. `src/openbell.mjs` is designed so a live Solana adapter can replace the fixture quote/reference adapters without changing the verifier contract.
 
 ## What is real vs. demo-scoped

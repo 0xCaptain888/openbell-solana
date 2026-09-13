@@ -1,0 +1,15 @@
+{
+  "proofVersion": "openbell.mainnet-jupiter-quote.v1",
+  "network": "solana-mainnet",
+  "provider": "jupiter",
+  "status": "QUOTED",
+  "inputMint": "So11111111111111111111111111111111111111112",
+  "outputMint": "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+  "inputAmountBaseUnits": "10000000",
+  "outputAmountBaseUnits": "302834",
+  "priceImpactPct": "0",
+  "contextSlot": 446638925,
+  "routeCount": 1,
+  "observedAt": "2026-09-13T06:52:59Z",
+  "warning": "Read-only Jupiter quote. No swap transaction was built, signed, or broadcast. Quote availability and route liquidity can change."
+}
