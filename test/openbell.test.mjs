@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DECISIONS, demoFixtures, evaluateExecution, hashEvidence } from '../src/openbell.mjs';
-import { assertTransactionProof } from '../src/transaction-proof.mjs';
+import { assertTransactionProof, attachTransactionProof } from '../src/transaction-proof.mjs';
 
 test('fair off-hours quote is VERIFIED', () => {
   const receipt = evaluateExecution(demoFixtures.verified);
@@ -39,4 +39,12 @@ test('transaction proof requires a found successful transaction', () => {
   assert.equal(assertTransactionProof(proof), proof);
   assert.throws(() => assertTransactionProof({ found: false }), /not found/);
   assert.throws(() => assertTransactionProof({ found: true, success: false, error: { InstructionError: [0, 'Custom'] } }), /Transaction failed/);
+});
+
+test('transaction proof can be attached to a receipt with a new evidence hash', async () => {
+  const receipt = { taskId: 'demo', decision: 'VERIFIED' };
+  const attached = await attachTransactionProof(receipt, { found: true, success: true, signature: 'sig', slot: 9, blockTime: 1, feeLamports: 5000, preBalances: [1], postBalances: [2], preTokenBalances: [], postTokenBalances: [] });
+  assert.equal(attached.transactionProof.signature, 'sig');
+  assert.match(attached.evidenceHash, /^[a-f0-9]{64}$/);
+  assert.notEqual(attached.evidenceHash, undefined);
 });

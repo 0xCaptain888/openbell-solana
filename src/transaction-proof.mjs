@@ -10,6 +10,17 @@ async function rpcCall(endpoint, method, params = []) {
   return payload.result;
 }
 
+function stable(value) {
+  if (Array.isArray(value)) return `[${value.map(stable).join(',')}]`;
+  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stable(value[key])}`).join(',')}}`;
+  return JSON.stringify(value);
+}
+
+async function sha256(value) {
+  const digest = await import('node:crypto').then(({ createHash }) => createHash('sha256').update(stable(value)).digest('hex'));
+  return digest;
+}
+
 /** Read-only proof for an already-broadcast Solana transaction. */
 export async function readTransactionProof({ endpoint, signature, commitment = 'confirmed' }) {
   if (!endpoint) throw new Error('RPC endpoint is required');
@@ -41,4 +52,21 @@ export function assertTransactionProof(proof) {
   if (!proof?.found) throw new Error('Transaction was not found at the selected commitment');
   if (!proof.success) throw new Error(`Transaction failed: ${JSON.stringify(proof.error)}`);
   return proof;
+}
+
+/** Attach a verified, already-broadcast transaction to a receipt without signing or broadcasting. */
+export async function attachTransactionProof(receipt, proof) {
+  assertTransactionProof(proof);
+  const body = { ...receipt, transactionProof: {
+    signature: proof.signature,
+    slot: proof.slot,
+    blockTime: proof.blockTime,
+    success: proof.success,
+    feeLamports: proof.feeLamports,
+    preBalances: proof.preBalances,
+    postBalances: proof.postBalances,
+    preTokenBalances: proof.preTokenBalances,
+    postTokenBalances: proof.postTokenBalances
+  } };
+  return { ...body, evidenceHash: await sha256(body) };
 }

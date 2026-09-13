@@ -40,6 +40,8 @@ npm run devnet:verify-tx
 
 This command only calls Solana `getTransaction`; it never signs, broadcasts, or moves funds.
 
+`attachTransactionProof()` can bind that read-only result into a receipt and recompute its evidence hash. This is the final verification step after a user has explicitly broadcast a transaction; OpenBell itself does not broadcast from this command.
+
 The core engine has no runtime dependencies and is deterministic. `src/openbell.mjs` is designed so a live Solana adapter can replace the fixture quote/reference adapters without changing the verifier contract.
 
 ## What is real vs. demo-scoped

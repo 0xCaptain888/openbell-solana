@@ -5,9 +5,19 @@ const fixtures = {
   scaledMismatch: { taskId:'judge-scaled-mismatch',asset:'AAPLx',mint:'AAPLx-mainnet-mint',referencePrice:210,executablePrice:210.1,premiumBps:5,liquidityUsd:250000,quoteAgeSeconds:1,decision:'BLOCKED',marketState:'UNDERLYING_MARKET_OPEN',reasons:['scaled_amount_used_as_raw_amount'],route:'Wallet transfer adapter',checks:{premiumWithinPolicy:true,liquidityHealthy:true,quoteFresh:true},evidenceHash:'50c0285fb240683ea4c5a4cee3c6f8b1a09ca3f341fc637a78f857ec6b72b882' }
 };
 let current='verified';
+let latestReceipt=null;
 const $ = (id)=>document.getElementById(id);
 const money=(n)=>`$${Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-function render(key){
+function stable(value){
+  if(Array.isArray(value)) return `[${value.map(stable).join(',')}]`;
+  if(value && typeof value==='object') return `{${Object.keys(value).sort().map(k=>`${JSON.stringify(k)}:${stable(value[k])}`).join(',')}}`;
+  return JSON.stringify(value);
+}
+async function sha256(value){
+  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(stable(value)));
+  return [...new Uint8Array(bytes)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function render(key){
   current=key; const f=fixtures[key]; const maxPremium=Number($('premiumRange').value); const maxLiquidity=Number($('liquidityRange').value);
   const blockedByPolicy=f.premiumBps>maxPremium || f.liquidityUsd<maxLiquidity;
   const decision=f.decision==='FROZEN'?'FROZEN':blockedByPolicy?'BLOCKED':'VERIFIED';
@@ -16,13 +26,13 @@ function render(key){
   $('heroDecision').textContent=decision; $('heroDecision').previousElementSibling.className=`status-dot status-${decision.toLowerCase()}`; $('decisionCard').className=`decision-card ${decision.toLowerCase()}`; $('decisionIcon').textContent=decision==='VERIFIED'?'✓':decision==='BLOCKED'?'!':'Ⅱ'; $('decisionTitle').textContent=decision; $('decisionSubtitle').textContent=decision==='VERIFIED'?'Quote is inside your fair-execution policy.':decision==='BLOCKED'?'The quote is executable, but not acceptable under your policy.':'Asset state is changing; settlement is held safely.';
   const reasonLabels=decision==='VERIFIED'?['Premium within policy','Liquidity is healthy',`Quote freshness is ${f.quoteAgeSeconds}s`]:reasons.map(r=>({off_hours_premium_exceeded:`Premium ${f.premiumBps} bps exceeds ${maxPremium} bps policy`,thin_liquidity:`Liquidity below $${maxLiquidity.toLocaleString()} minimum`,corporate_action_transition:'Corporate-action transition is active',scaled_amount_used_as_raw_amount:'Displayed amount cannot be used as raw amount'}[r]||r));
   $('reasonList').innerHTML=reasonLabels.map(x=>`<div><span>${decision==='VERIFIED'?'✓':'!'}</span><span>${x}</span></div>`).join('');$('executeBtn').textContent=decision==='VERIFIED'?'Execute protected order':decision==='BLOCKED'?'Queue for fair price':'View recovery path'; $('executeBtn').disabled=decision!=='VERIFIED';$('executeBtn').style.opacity=decision==='VERIFIED'?'1':'.6';
-  const hash=f.evidenceHash; $('evidenceHash').textContent=hash;$('receiptDecision').textContent=`${decision} · ${f.asset}`;$('receiptMint').textContent=f.mint;$('receiptMarket').textContent=f.marketState;$('receiptRoute').textContent=f.route;$('rawReceipt').textContent=JSON.stringify({...f,decision,reasons,policy:{maxPremiumBps:maxPremium,minLiquidityUsd:maxLiquidity}},null,2);
+  const receipt={...f,decision,reasons,policy:{maxPremiumBps:maxPremium,minLiquidityUsd:maxLiquidity}}; const hash=await sha256(receipt); latestReceipt={...receipt,evidenceHash:hash}; $('evidenceHash').textContent=hash;$('receiptDecision').textContent=`${decision} · ${f.asset}`;$('receiptMint').textContent=f.mint;$('receiptMarket').textContent=f.marketState;$('receiptRoute').textContent=f.route;$('rawReceipt').textContent=JSON.stringify(latestReceipt,null,2);
 }
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
-document.querySelectorAll('.asset').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.asset').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render(btn.dataset.asset)}));
-$('premiumRange').addEventListener('input',e=>{$('premiumOut').textContent=`${e.target.value} bps`;render(current)});$('liquidityRange').addEventListener('input',e=>{$('liquidityOut').textContent=`$${(Number(e.target.value)/1000).toFixed(0)}k`;render(current)});
+document.querySelectorAll('.asset').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.asset').forEach(b=>b.classList.remove('active'));btn.classList.add('active');void render(btn.dataset.asset)}));
+$('premiumRange').addEventListener('input',e=>{$('premiumOut').textContent=`${e.target.value} bps`;void render(current)});$('liquidityRange').addEventListener('input',e=>{$('liquidityOut').textContent=`$${(Number(e.target.value)/1000).toFixed(0)}k`;void render(current)});
 $('connectBtn').addEventListener('click',()=>{ $('connectBtn').textContent='7xK…9pQ';toast('Demo wallet connected · no keys stored') });
 $('executeBtn').addEventListener('click',()=>{if(!$('executeBtn').disabled)toast('Protected order simulated · receipt updated')});
-$('verifyBtn').addEventListener('click',()=>toast(`Evidence verified · ${fixtures[current].evidenceHash.slice(0,10)}…`));$('copyHash').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('evidenceHash').textContent);toast('Evidence hash copied')}catch{toast('Hash is visible in the receipt')}});
-$('judgeBtn').addEventListener('click',()=>{const steps=['verified','blocked','frozen'];let i=0;$('judgeBtn').disabled=true;$('progressLabel').textContent='Running verifier…';const timer=setInterval(()=>{render(steps[i]);document.querySelectorAll('.timeline-step').forEach((s,n)=>s.classList.toggle('active',n<=i));$('progressFill').style.width=`${((i+1)/3)*100}%`; $('progressLabel').textContent=`${i+1}/3 · ${fixtures[steps[i]].decision}`;i++;if(i===3){clearInterval(timer);$('judgeBtn').disabled=false;$('progressLabel').textContent='Complete · receipt ready';toast('Judge run complete · three outcomes verified')}} ,850)});
-render('verified');
+$('verifyBtn').addEventListener('click',async()=>{if(!latestReceipt){toast('Run a scenario first');return} const {evidenceHash,...body}=latestReceipt; const recalculated=await sha256(body); toast(recalculated===evidenceHash?'Evidence verified · PASS':'Evidence mismatch · FAIL')});$('copyHash').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('evidenceHash').textContent);toast('Evidence hash copied')}catch{toast('Hash is visible in the receipt')}});
+$('judgeBtn').addEventListener('click',()=>{const steps=['verified','blocked','frozen'];let i=0;$('judgeBtn').disabled=true;$('progressLabel').textContent='Running verifier…';const timer=setInterval(()=>{void render(steps[i]);document.querySelectorAll('.timeline-step').forEach((s,n)=>s.classList.toggle('active',n<=i));$('progressFill').style.width=`${((i+1)/3)*100}%`; $('progressLabel').textContent=`${i+1}/3 · ${fixtures[steps[i]].decision}`;i++;if(i===3){clearInterval(timer);$('judgeBtn').disabled=false;$('progressLabel').textContent='Complete · receipt ready';toast('Judge run complete · three outcomes verified')}} ,850)});
+void render('verified');
