@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/jupiter-quote.mjs": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}

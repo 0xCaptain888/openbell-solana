@@ -97,6 +97,22 @@ The repository includes one read-only `QUOTED` observation in
 reported price impact at the recorded context slot. It is evidence of quote
 discovery only; no swap was signed or broadcast.
 
+### Optional live quote proxy
+
+Static GitHub Pages must not receive a Jupiter secret. For a live browser
+integration, deploy `api/jupiter-quote.mjs` to a serverless host and configure
+`JUPITER_API_KEY` there. The proxy accepts only read-only `GET` requests,
+strips the provider's raw payload, sets `Cache-Control: no-store`, and maps
+provider/network failures to explicit `NO_ROUTE` or `UNAVAILABLE` states:
+
+```text
+GET /api/jupiter-quote?inputMint=<mint>&outputMint=<mint>&amount=<base-units>
+```
+
+The committed Pages Demo intentionally continues to use proof files so judges
+can run it without a hosted secret. `vercel.json` contains the minimal
+function configuration for a Vercel deployment.
+
 The core engine has no runtime dependencies and is deterministic. `src/openbell.mjs` is designed so a live Solana adapter can replace the fixture quote/reference adapters without changing the verifier contract.
 
 ## What is real vs. demo-scoped
