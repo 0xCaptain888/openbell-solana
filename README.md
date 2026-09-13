@@ -42,6 +42,32 @@ This command only calls Solana `getTransaction`; it never signs, broadcasts, or 
 
 `attachTransactionProof()` can bind that read-only result into a receipt and recompute its evidence hash. This is the final verification step after a user has explicitly broadcast a transaction; OpenBell itself does not broadcast from this command.
 
+### Recorded Devnet plumbing proof
+
+The repository includes one explicitly authorized Devnet self-transfer proof at
+`evidence/devnet-self-transfer-proof.json`. It is intentionally a 0.001 SOL
+self-transfer: it proves wallet signing, RPC broadcast, confirmation, and
+independent `getTransaction` verification, but it is **not** presented as a
+tokenized-stock trade. The guarded runner is:
+
+```bash
+OPENBELL_ALLOW_BROADCAST=1 \
+OPENBELL_SOLANA_RPC_URL="<your Devnet endpoint>" \
+npm run devnet:broadcast-proof
+```
+
+To re-check an existing signature without broadcasting again:
+
+```bash
+OPENBELL_TX_SIGNATURE="<signature>" \
+OPENBELL_SOLANA_RPC_URL="<your Devnet endpoint>" \
+npm run devnet:broadcast-proof
+```
+
+The runner refuses transfers above 0.001 SOL, defaults to a self-transfer, and
+uses HTTP status polling so it also works with RPC providers that do not expose
+WebSocket `signatureSubscribe`.
+
 The core engine has no runtime dependencies and is deterministic. `src/openbell.mjs` is designed so a live Solana adapter can replace the fixture quote/reference adapters without changing the verifier contract.
 
 ## What is real vs. demo-scoped

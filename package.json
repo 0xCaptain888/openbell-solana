@@ -10,8 +10,14 @@
     "check": "npm test",
     "devnet:check": "node scripts/check-devnet.mjs",
     "devnet:verify-tx": "node scripts/verify-transaction.mjs",
+    "devnet:broadcast-proof": "node scripts/broadcast-devnet-proof.mjs",
     "serve": "node scripts/serve.mjs"
   },
-  "engines": { "node": ">=20" },
-  "license": "MIT"
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@solana/web3.js": "^1.99.0"
+  }
 }
