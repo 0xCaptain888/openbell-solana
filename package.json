@@ -11,6 +11,8 @@
     "devnet:check": "node scripts/check-devnet.mjs",
     "devnet:verify-tx": "node scripts/verify-transaction.mjs",
     "devnet:broadcast-proof": "node scripts/broadcast-devnet-proof.mjs",
+    "mainnet:verify-mint": "node scripts/verify-mainnet-mint.mjs",
+    "mainnet:quote": "node scripts/quote.mjs",
     "serve": "node scripts/serve.mjs"
   },
   "engines": {

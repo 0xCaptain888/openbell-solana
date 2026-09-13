@@ -68,6 +68,28 @@ The runner refuses transfers above 0.001 SOL, defaults to a self-transfer, and
 uses HTTP status polling so it also works with RPC providers that do not expose
 WebSocket `signatureSubscribe`.
 
+### Mainnet tokenized-stock observation
+
+OpenBell also includes a read-only Mainnet verifier for the public AAPLx Mint
+(Apple xStock). It checks the account owner, Token-2022 Mint shape, decimals,
+embedded token metadata, and the scaled-UI multiplier without signing or
+submitting a transaction:
+
+```bash
+OPENBELL_MAINNET_RPC_URL="<your Mainnet endpoint>" \
+OPENBELL_STOCK_MINT="XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp" \
+npm run mainnet:verify-mint
+```
+
+The observed public metadata is recorded in
+`evidence/mainnet-aaplx-mint.json`. This is a Mainnet observation only; it is
+not a claim that the Devnet plumbing proof traded a real equity token.
+
+`npm run mainnet:quote` uses Jupiter's current quote adapter and returns
+`QUOTED`, `NO_ROUTE`, or `UNAVAILABLE` rather than manufacturing a price when
+the provider or route is unavailable. A Jupiter API key, when required by the
+provider, is read only from `JUPITER_API_KEY` and is never written to the repo.
+
 The core engine has no runtime dependencies and is deterministic. `src/openbell.mjs` is designed so a live Solana adapter can replace the fixture quote/reference adapters without changing the verifier contract.
 
 ## What is real vs. demo-scoped
