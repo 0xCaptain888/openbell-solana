@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DECISIONS, demoFixtures, evaluateExecution, hashEvidence } from '../src/openbell.mjs';
+import { assertTransactionProof } from '../src/transaction-proof.mjs';
 
 test('fair off-hours quote is VERIFIED', () => {
   const receipt = evaluateExecution(demoFixtures.verified);
@@ -31,4 +32,11 @@ test('scaled UI amount cannot be used as raw transfer amount', () => {
 
 test('evidence hash is deterministic', () => {
   assert.equal(hashEvidence({ b: 2, a: 1 }), hashEvidence({ a: 1, b: 2 }));
+});
+
+test('transaction proof requires a found successful transaction', () => {
+  const proof = { found: true, success: true, signature: 'demo', slot: 42, preTokenBalances: [], postTokenBalances: [] };
+  assert.equal(assertTransactionProof(proof), proof);
+  assert.throws(() => assertTransactionProof({ found: false }), /not found/);
+  assert.throws(() => assertTransactionProof({ found: true, success: false, error: { InstructionError: [0, 'Custom'] } }), /Transaction failed/);
 });

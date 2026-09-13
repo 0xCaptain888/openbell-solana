@@ -9,6 +9,7 @@
     "test": "node --test test/*.test.mjs",
     "check": "npm test",
     "devnet:check": "node scripts/check-devnet.mjs",
+    "devnet:verify-tx": "node scripts/verify-transaction.mjs",
     "serve": "node scripts/serve.mjs"
   },
   "engines": { "node": ">=20" },

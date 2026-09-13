@@ -30,6 +30,16 @@ npm run devnet:check
 
 The endpoint is read only from the process environment. Never commit it to `.env`, source code, screenshots, or the public repository.
 
+Once a wallet has explicitly signed and broadcast a test transaction, independently verify it with:
+
+```bash
+OPENBELL_SOLANA_RPC_URL="<your Alchemy Devnet endpoint>" \
+OPENBELL_TX_SIGNATURE="<signature>" \
+npm run devnet:verify-tx
+```
+
+This command only calls Solana `getTransaction`; it never signs, broadcasts, or moves funds.
+
 The core engine has no runtime dependencies and is deterministic. `src/openbell.mjs` is designed so a live Solana adapter can replace the fixture quote/reference adapters without changing the verifier contract.
 
 ## What is real vs. demo-scoped
