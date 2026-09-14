@@ -140,6 +140,22 @@ The core engine has no runtime dependencies and is deterministic. `src/openbell.
 
 Supported actions are `tasks`, `task`, `notifications`, `create`, `evaluate`, `recover`, `cancel`, and `settle`. Secrets are server-side environment variables only; the public browser never receives the database token, API bearer token, trusted signer configuration, or notification secret. Exact setup and request examples are in [`docs/integration.md`](docs/integration.md).
 
+### Recorded production task proof
+
+On September 14, 2026, the deployed Vercel API completed an authorized
+`create → evaluate → read-back → notifications` smoke test against the remote
+Redis store. The signed task moved from `PENDING` to `VERIFIED`, was read back
+as `VERIFIED`, and produced persisted notifications. The public status endpoint
+reported `REMOTE_CONFIGURED`, `strict`, one trusted policy key, and configured
+write authorization.
+
+The sanitized result is committed at
+[`evidence/production-task-smoke.json`](evidence/production-task-smoke.json).
+It includes the task ID, policy hash, evidence hash, source commit, and final
+configuration state, but no bearer token, Redis credential, or signing key.
+This is production API/persistence evidence; it is not presented as a Solana
+transaction or tokenized-stock trade.
+
 ## What is real vs. demo-scoped
 
 - The decision engine, receipts, evidence hashes, market-state transitions, raw/scaled amount checks, and test matrix are implemented.
@@ -148,6 +164,7 @@ Supported actions are `tasks`, `task`, `notifications`, `create`, `evaluate`, `r
 - The evaluator console records a local activity trail and exports the current receipt; neither feature uploads user data or stores signing credentials.
 - Browser-local persistence is explicitly labeled and survives refresh on the same device. It is not claimed as shared cloud persistence.
 - The deployed task API exposes a public configuration check while task operations remain fail-closed behind remote storage, bearer authorization, and trusted policy signer configuration.
+- A sanitized production smoke proof records a successful authorized task write, strict-policy evaluation, Redis read-back, and notification creation.
 - A production adapter must provide live issuer/mint metadata, oracle/reference prices, DEX/RFQ quotes, and Solana transaction signatures.
 - Tokenized-stock availability and eligibility vary by jurisdiction and issuer. This prototype does not bypass KYC, transfer controls, or regional restrictions.
 

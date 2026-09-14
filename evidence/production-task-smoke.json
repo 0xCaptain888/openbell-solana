@@ -1,0 +1,35 @@
+{
+  "proofVersion": "openbell.production-task-smoke.v1",
+  "scope": "vercel_redis_strict_policy_write_read_notifications",
+  "observedAt": "2026-09-14T06:06:55Z",
+  "endpoint": "https://openbell-solana-live.vercel.app/api/openbell",
+  "sourceCommit": "b884d9c5f2e93c75ebe7281a5ffb256e4f1d51ef",
+  "task": {
+    "taskId": "production-smoke-1789364980764",
+    "createdState": "PENDING",
+    "evaluatedState": "VERIFIED",
+    "persistedState": "VERIFIED",
+    "policyHash": "19a0a7c54b917735da974a27e26c698fb95867bd467baa553b96f1ac94a2a7ec",
+    "evidenceHash": "f9a8a6d2dc7185bed6536e745fadc4272d33728198e77ffa5bb9e7d57c8682ba",
+    "persistedNotificationCountAtLeast": 2
+  },
+  "deployment": {
+    "status": "ok",
+    "persistence": "REMOTE_CONFIGURED",
+    "policyMode": "strict",
+    "trustedPolicyKeyCount": 1,
+    "writeAuthorization": "CONFIGURED"
+  },
+  "verifiedFlow": [
+    "create",
+    "evaluate",
+    "read-back",
+    "notifications"
+  ],
+  "securityCleanup": {
+    "allowedOriginRestoredTo": "https://openbell-solana-live.vercel.app",
+    "temporaryRunnerRemoved": true,
+    "secretsCommitted": false
+  },
+  "warning": "This proves an authorized production API write, strict Ed25519 policy evaluation, Redis persistence, read-back, and notification creation. It is not a Solana transaction or a tokenized-stock trade."
+}
