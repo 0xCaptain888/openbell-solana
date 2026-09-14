@@ -35,6 +35,7 @@ export function evaluateExecution(input) {
     minLiquidityUsd = 10000,
     corporateActionPending = false,
     eligible = true,
+    routeAvailable = true,
     orderNotionalUsd = 10,
     maxOrderNotionalUsd = 100,
     rawBalance = null,
@@ -61,8 +62,10 @@ export function evaluateExecution(input) {
     rawScaledAmountCorrect: rawScaledMatch,
     issuerBound: Boolean(mint && issuer)
   };
+  if (!routeAvailable) checks.routeAvailable = false;
   const reasons = [];
   if (!eligible) reasons.push('jurisdiction_not_eligible');
+  if (!routeAvailable) reasons.push('no_executable_route');
   if (corporateActionPending) reasons.push('corporate_action_transition');
   if (!checks.quoteFresh) reasons.push('quote_stale');
   if (!checks.premiumWithinPolicy) reasons.push('off_hours_premium_exceeded');

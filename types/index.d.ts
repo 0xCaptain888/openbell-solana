@@ -20,7 +20,7 @@ export interface PolicyEnvelope {
 }
 export interface Observation {
   underlyingOpen?: boolean; referencePrice: number; executablePrice: number; quoteAgeSeconds?: number;
-  liquidityUsd?: number; corporateActionPending?: boolean; eligible?: boolean; route?: string; observedAt?: string;
+  liquidityUsd?: number; corporateActionPending?: boolean; eligible?: boolean; routeAvailable?: boolean; route?: string; observedAt?: string;
 }
 export interface Receipt { taskId: string; decision: Decision; evidenceHash: string; reasons: string[]; checks: Record<string, boolean>; [key: string]: unknown }
 export interface OpenBellTask { taskId: string; state: TaskState; intent: Intent; policyEnvelope: PolicyEnvelope; policyHash: string; receipt: Receipt | null; events: unknown[]; createdAt: string; updatedAt: string }

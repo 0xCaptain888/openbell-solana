@@ -67,7 +67,8 @@ function observationFromQuote(quote, observedAt) {
     executablePrice: 100 * (1 + safeImpactPct / 100),
     quoteAgeSeconds: 0,
     liquidityUsd: 0,
-    eligible: quoted,
+    eligible: true,
+    routeAvailable: quoted,
     route: quoted
       ? `Jupiter read-only route · ${quote.routePlan.length} hop(s) · slot ${quote.contextSlot ?? 'unknown'}`
       : `Jupiter read-only route · ${quote.status}`,

@@ -54,3 +54,18 @@ test('Live Judge Run is idempotent and fails closed without consent', async () =
   assert.equal(replay.body.idempotentReplay, true);
   assert.equal((await store.listTasks()).length, 1);
 });
+
+test('Live Judge Run reports a missing route as a route failure, not an eligibility failure', async () => {
+  const store = new MemoryTaskStore();
+  const handler = createJudgeRunHandler({
+    store,
+    quoteFetcher: async () => ({ ...quote, status: 'NO_ROUTE', outAmount: null, routePlan: [] }),
+    limiter: async () => {},
+    keyPair: generateKeyPairSync('ed25519')
+  });
+  const res = responseRecorder();
+  await handler({ method: 'POST', headers: { 'x-idempotency-key': 'judge-no-route-1' }, body: { consent: true } }, res);
+  assert.equal(res.body.task.state, 'BLOCKED');
+  assert.deepEqual(res.body.task.receipt.reasons, ['no_executable_route']);
+  assert.equal(res.body.task.receipt.checks.routeAvailable, false);
+});
