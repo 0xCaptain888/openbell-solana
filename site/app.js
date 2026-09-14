@@ -26,7 +26,7 @@ async function render(key){
   const decision=f.decision==='FROZEN'?'FROZEN':blockedByPolicy?'BLOCKED':'VERIFIED';
   const reasons=decision==='FROZEN'?f.reasons:[...(f.premiumBps>maxPremium?['off_hours_premium_exceeded']:[]),...(f.liquidityUsd<maxLiquidity?['thin_liquidity']:[]),...(f.reasons.includes('scaled_amount_used_as_raw_amount')?f.reasons:[])];
   $('heroAsset').textContent=f.asset;$('heroRef').textContent=money(f.referencePrice);$('heroQuote').textContent=money(f.executablePrice);$('heroPremium').textContent=`${f.premiumBps>=0?'+':''}${f.premiumBps} bps`;$('refPrice').textContent=money(f.referencePrice);$('execPrice').textContent=money(f.executablePrice);$('premiumValue').textContent=`${f.premiumBps>=0?'+':''}${f.premiumBps} bps`;$('premiumValue').className=f.premiumBps>maxPremium?'negative':'positive';$('liquidityValue').textContent=`$${f.liquidityUsd.toLocaleString()}`;$('marketState').textContent=f.marketState.replaceAll('_',' ');
-  $('heroDecision').textContent=decision; $('heroDecision').previousElementSibling.className=`status-dot status-${decision.toLowerCase()}`; $('decisionCard').className=`decision-card ${decision.toLowerCase()}`; $('decisionIcon').textContent=decision==='VERIFIED'?'✓':decision==='BLOCKED'?'!':'Ⅱ'; $('decisionTitle').textContent=decision; $('decisionSubtitle').textContent=decision==='VERIFIED'?'Quote is inside your fair-execution policy.':decision==='BLOCKED'?'The quote is executable, but not acceptable under your policy.':'Asset state is changing; settlement is held safely.';
+  $('heroDecision').textContent=decision; $('heroDecision').previousElementSibling.className=`status-dot status-${decision.toLowerCase()}`; document.querySelector('.decision-caption').textContent=decision==='VERIFIED'?'fair enough to execute':decision==='BLOCKED'?'stopped before execution':'settlement safely held'; $('decisionCard').className=`decision-card ${decision.toLowerCase()}`; $('decisionIcon').textContent=decision==='VERIFIED'?'✓':decision==='BLOCKED'?'!':'Ⅱ'; $('decisionTitle').textContent=decision; $('decisionSubtitle').textContent=decision==='VERIFIED'?'Quote is inside your fair-execution policy.':decision==='BLOCKED'?'The quote is executable, but not acceptable under your policy.':'Asset state is changing; settlement is held safely.';
   const reasonLabels=decision==='VERIFIED'?['Premium within policy','Liquidity is healthy',`Quote freshness is ${f.quoteAgeSeconds}s`]:reasons.map(r=>({off_hours_premium_exceeded:`Premium ${f.premiumBps} bps exceeds ${maxPremium} bps policy`,thin_liquidity:`Liquidity below $${maxLiquidity.toLocaleString()} minimum`,corporate_action_transition:'Corporate-action transition is active',scaled_amount_used_as_raw_amount:'Displayed amount cannot be used as raw amount'}[r]||r));
   $('reasonList').innerHTML=reasonLabels.map(x=>`<div><span>${decision==='VERIFIED'?'✓':'!'}</span><span>${x}</span></div>`).join('');$('executeBtn').textContent=decision==='VERIFIED'?'Execute protected order':decision==='BLOCKED'?'Explain blocked quote':'View recovery path'; $('executeBtn').disabled=false;$('executeBtn').dataset.decision=decision;$('executeBtn').style.opacity='1';$('executeBtn').className=`button full ${decision==='VERIFIED'?'button-primary':'button-outline'}`;if($('actionStatus'))$('actionStatus').textContent=decision==='VERIFIED'?'Ready · protected order can be simulated safely.':decision==='BLOCKED'?'Blocked · policy stops this quote before settlement.':'Frozen · settlement is held while the asset state changes.';syncRecovery(decision);
   const policy={maxPremiumBps:maxPremium,minLiquidityUsd:maxLiquidity};const policyHash=await sha256(policy);const receipt={...f,decision,reasons,policy,policyHash}; const hash=await sha256(receipt); latestReceipt={...receipt,evidenceHash:hash}; $('evidenceHash').textContent=hash;$('receiptDecision').textContent=`${decision} · ${f.asset}`;$('receiptMint').textContent=f.mint;$('receiptMarket').textContent=f.marketState;$('receiptRoute').textContent=f.route;$('rawReceipt').textContent=JSON.stringify(latestReceipt,null,2);updateInfrastructureSummary();persistBrowserState();
@@ -61,3 +61,101 @@ $('checkApiBtn').addEventListener('click',checkRemoteApi);void checkRemoteApi();
 // GitHub Pages falls back to committed evidence; no browser-held API key is used.
 const existingLiveButton=$('loadLiveBtn');
 if(existingLiveButton){const liveButton=existingLiveButton.cloneNode(true);existingLiveButton.replaceWith(liveButton);liveButton.addEventListener('click',async()=>{liveButton.disabled=true;liveButton.textContent='Loading…';$('liveStatus').textContent='Reading Mainnet proof…';try{const mint=await fetch('./evidence/mainnet-aaplx-mint.json',{cache:'no-store'}).then(r=>r.json());let quote=await fetch('./evidence/mainnet-aaplx-jupiter-quote.json',{cache:'no-store'}).then(r=>r.json());let source='RECORDED';try{const proxy=window.OPENBELL_QUOTE_PROXY||'/api/jupiter-quote';const live=await fetch(`${proxy}?inputMint=${encodeURIComponent(quote.inputMint)}&outputMint=${encodeURIComponent(quote.outputMint)}&amount=${encodeURIComponent(quote.inputAmountBaseUnits)}`,{cache:'no-store'}).then(r=>r.ok?r.json():null);if(live?.status==='QUOTED'){quote={...quote,status:'QUOTED',outputAmountBaseUnits:live.outAmount,routeCount:Array.isArray(live.routePlan)?live.routePlan.length:quote.routeCount,contextSlot:live.contextSlot??quote.contextSlot};source='LIVE PROXY'}}catch{}const mintOk=mint.found&&mint.isToken2022&&mint.tokenMetadata?.symbol==='AAPLx';const quoteOk=quote.status==='QUOTED';$('liveStatus').textContent=`${mintOk?'Mint verified':'Mint check failed'} · ${quoteOk?'Jupiter QUOTED':'Jupiter '+quote.status} · ${source}`;$('liveMintLabel').textContent=`${mint.tokenMetadata?.name||'AAPLx'} · Token-2022 · ${mint.decimals} decimals`;$('liveQuoteLabel').textContent=quoteOk?`SOL → AAPLx · ${quote.routeCount} route · ${quote.outputAmountBaseUnits} base units`:`Quote status: ${quote.status}`;toast(mintOk&&quoteOk?`${source} evidence loaded · read-only`:'Evidence loaded · inspect status')}catch{$('liveStatus').textContent='Evidence unavailable · fixture mode';toast('Could not load committed evidence')}finally{liveButton.disabled=false;liveButton.textContent='Refresh Mainnet proof'}})}
+
+const setMatrixValue=(id,value,pass)=>{const node=$(id);if(!node)return;node.textContent=value;node.className=pass===true?'pass':pass===false?'fail':''};
+async function loadProductionProof(){
+  let recorded=false;
+  try{
+    const proofResponse=await fetch('./evidence/production-task-smoke.json',{cache:'no-store'});
+    const proof=await proofResponse.json();
+    if(!proofResponse.ok)throw new Error('Recorded production proof is unavailable');
+    recorded=proof.task?.evaluatedState==='VERIFIED'&&proof.task?.persistedState==='VERIFIED';
+    setMatrixValue('prodTask',proof.task?.evaluatedState,proof.task?.evaluatedState==='VERIFIED');
+    setMatrixValue('prodReadBack',proof.task?.persistedState,proof.task?.persistedState==='VERIFIED');
+    setMatrixValue('prodNotifications',`≥ ${proof.task?.persistedNotificationCountAtLeast??0}`,Number(proof.task?.persistedNotificationCountAtLeast)>=2);
+    $('productionJson').textContent=JSON.stringify(proof,null,2);
+  }catch(error){
+    setMatrixValue('prodTask','UNAVAILABLE',false);setMatrixValue('prodReadBack','UNAVAILABLE',false);setMatrixValue('prodNotifications','UNAVAILABLE',false);
+    $('productionJson').textContent=error.message;
+  }
+  try{
+    const statusResponse=await fetch('/api/openbell?action=status',{cache:'no-store'});
+    const status=await statusResponse.json();
+    if(!statusResponse.ok)throw new Error('Production status is unavailable');
+    const ready=status.status==='ok'&&status.persistence==='REMOTE_CONFIGURED'&&status.policyMode==='strict'&&status.trustedPolicyKeyCount>0;
+    setMatrixValue('prodApi',status.status==='ok'?'ONLINE':'OFFLINE',status.status==='ok');
+    setMatrixValue('prodPersistence',status.persistence,status.persistence==='REMOTE_CONFIGURED');
+    setMatrixValue('prodPolicy',String(status.policyMode).toUpperCase(),status.policyMode==='strict');
+    setMatrixValue('prodSigner',`${status.trustedPolicyKeyCount} TRUSTED`,status.trustedPolicyKeyCount>0);
+    setMatrixValue('prodWriteAuth',status.writeAuthorization,status.writeAuthorization==='CONFIGURED');
+    $('productionOverall').textContent=ready&&recorded?'PRODUCTION READY':ready?'API READY':'FAIL-CLOSED';
+    $('productionOverall').className=`infra-state ${ready?'ready':'pending'}`;
+  }catch(error){
+    ['prodApi','prodPersistence','prodPolicy','prodSigner','prodWriteAuth'].forEach(id=>setMatrixValue(id,'UNAVAILABLE',false));
+    $('productionOverall').textContent=recorded?'RECORDED PROOF':'REPLAY AVAILABLE';
+    $('productionOverall').className='infra-state pending';
+  }
+}
+
+function setLiveStage(active,complete=false){
+  document.querySelectorAll('#liveRunStages>div').forEach((stage,index)=>{
+    stage.classList.toggle('active',!complete&&index===active);
+    stage.classList.toggle('done',complete||index<active);
+  });
+}
+
+async function runLiveJudgeTask(){
+  const button=$('liveJudgeBtn');
+  const badge=$('liveRunBadge');
+  let idempotencyKey=sessionStorage.getItem('openbell.live-judge-key');
+  if(!idempotencyKey){idempotencyKey=`judge-browser-${crypto.randomUUID()}`;sessionStorage.setItem('openbell.live-judge-key',idempotencyKey)}
+  button.disabled=true;button.textContent='Running production flow…';
+  $('liveRunState').textContent='SERVER EXECUTING RESTRICTED FLOW';
+  badge.textContent='RUNNING';badge.className='infra-state pending';
+  let stage=0;setLiveStage(stage);
+  const animation=setInterval(()=>{stage=Math.min(stage+1,5);setLiveStage(stage)},450);
+  try{
+    const response=await fetch('/api/judge-run',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-idempotency-key':idempotencyKey},
+      body:JSON.stringify({consent:true})
+    });
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.message||`HTTP ${response.status}`);
+    clearInterval(animation);setLiveStage(5,true);
+    const task=data.task||{};const receipt=task.receipt||{};const persisted=data.persistence||{};const quote=data.quote||{};
+    $('liveTaskId').textContent=task.taskId||'unknown';
+    $('liveDecision').textContent=task.state||'unknown';
+    $('liveReadBack').textContent=`${persisted.readBack||'unknown'} · ${persisted.receiptHashMatch===false?'MISMATCH':'MATCH'}`;
+    $('liveNotifications').textContent=String(persisted.notificationCount??0);
+    $('liveEvidenceHash').textContent=receipt.evidenceHash||'not returned';
+    $('liveRunState').textContent=data.idempotentReplay?'IDEMPOTENT RESULT REPLAYED':'LIVE PRODUCTION FLOW COMPLETE';
+    badge.textContent=task.state||'COMPLETE';badge.className=`infra-state ${task.state==='VERIFIED'?'ready':'pending'}`;
+    $('liveRunNote').textContent=`Jupiter ${quote.status||'previously observed'} · ${quote.routeCount??0} route(s) · slot ${quote.contextSlot??'n/a'} · read-only. Redis read-back ${persisted.readBack||'unknown'} with ${persisted.notificationCount??0} notification(s). No transaction was built.`;
+    if(receipt.evidenceHash){
+      latestReceipt=receipt;
+      $('evidenceHash').textContent=receipt.evidenceHash;
+      $('receiptDecision').textContent=`${receipt.decision} · ${receipt.asset}`;
+      $('receiptMint').textContent=receipt.mint;
+      $('receiptMarket').textContent=receipt.marketState;
+      $('receiptRoute').textContent=receipt.route;
+      $('rawReceipt').textContent=JSON.stringify({liveJudgeRun:data},null,2);
+      persistBrowserState();updateInfrastructureSummary();
+    }
+    recordActivity(task.state||'API',`Live production task ${task.taskId} · Redis read-back ${persisted.readBack}`);
+    toast(`Live Judge Task complete · ${task.state}`);
+  }catch(error){
+    clearInterval(animation);setLiveStage(-1);
+    $('liveRunState').textContent='LIVE RUN FAILED CLOSED';
+    badge.textContent='NO WRITE CLAIMED';badge.className='infra-state offline';
+    $('liveRunNote').textContent=`${error.message}. The deterministic verifier and committed production proof remain available below.`;
+    recordActivity('ERROR',`Live Judge Run failed closed · ${error.message}`);toast('Live Judge Run failed closed');
+  }finally{button.disabled=false;button.textContent='Run Live Judge Task'}
+}
+
+$('liveJudgeBtn')?.addEventListener('click',runLiveJudgeTask);
+document.querySelectorAll('[data-copy-target]').forEach(button=>button.addEventListener('click',async()=>{
+  const value=$(button.dataset.copyTarget)?.textContent||'';
+  try{await navigator.clipboard.writeText(value);toast('Copied to clipboard')}catch{toast('Clipboard unavailable · value remains visible')}
+}));
+void loadProductionProof();

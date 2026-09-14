@@ -33,6 +33,9 @@ flowchart TB
   UI[Judge Replay UI] --> LOCAL[Browser-local Replay State]
   UI --> STATUS[Public Configuration Probe]
   STATUS --> API
+  LIVE[Restricted Live Judge Run] --> QUOTE[Read-only Jupiter AAPLx route]
+  QUOTE --> LIMIT[Fixed $10 evaluate-only policy]
+  LIMIT --> SDK
 ```
 
-The repository includes in-memory, atomic JSON file, and Upstash-compatible Redis REST adapters. The browser replay is explicitly device-local and contains no signing keys. Anonymous visitors can read only the serverless API's secret-free configuration status; every task operation requires durable remote storage, operator bearer authorization, and a policy signed by the configured trust root. Missing infrastructure produces an explicit `503` instead of an in-memory or ephemeral-filesystem fallback.
+The repository includes in-memory, atomic JSON file, and Upstash-compatible Redis REST adapters. The browser replay is explicitly device-local and contains no signing keys. General task operations require durable remote storage, operator bearer authorization, and a policy signed by the configured trust root. A separate anonymous Judge route has no general API authority: its asset, notional, expiry, permissions, idempotency, and rate boundary are enforced server-side. Missing infrastructure produces an explicit `503` instead of an in-memory or ephemeral-filesystem fallback.

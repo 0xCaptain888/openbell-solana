@@ -1,0 +1,58 @@
+openapi: 3.1.0
+info:
+  title: OpenBell Task API
+  version: 0.4.0
+  description: Signed-policy execution control for tokenized-stock agents. Operator routes never sign or broadcast transactions.
+servers:
+  - url: https://openbell-solana-live.vercel.app/api/openbell
+paths:
+  /api/openbell:
+    get:
+      summary: Read status, tasks, one task, or notifications
+      parameters:
+        - { name: action, in: query, required: true, schema: { type: string, enum: [status, tasks, task, notifications] } }
+        - { name: taskId, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+        - { name: cursor, in: query, schema: { type: string } }
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        '200': { description: Successful response, content: { application/json: { schema: { type: object } } } }
+    post:
+      summary: Create or transition an execution-control task
+      parameters:
+        - { name: action, in: query, required: true, schema: { type: string, enum: [create, evaluate, recover, cancel, settle] } }
+        - { name: taskId, in: query, schema: { type: string } }
+        - { name: x-idempotency-key, in: header, schema: { type: string, minLength: 8, maxLength: 96 } }
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200': { description: Existing idempotent result or successful transition }
+        '201': { description: Task created }
+        '401': { description: Missing or invalid operator token }
+        '422': { description: Policy, state, or validation failure }
+  /api/judge-run:
+    post:
+      summary: Run a public, restricted, no-settlement production proof
+      parameters:
+        - { name: x-idempotency-key, in: header, required: true, schema: { type: string, minLength: 8, maxLength: 96 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [consent]
+              properties: { consent: { const: true } }
+      responses:
+        '200': { description: Sanitized live route, signed-policy decision, Redis read-back, and notifications }
+        '429': { description: Per-client creation rate limit }
+        '503': { description: Durable persistence unavailable }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer }

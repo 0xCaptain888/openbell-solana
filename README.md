@@ -8,18 +8,14 @@ OpenBell protects users and trading agents from stale prices, thin liquidity, of
 
 ## The 3-minute judge path
 
-1. Open the static Demo in `site/index.html` (or the deployed Pages URL).
-2. Connect is intentionally a mock wallet action for the public demo; no private key is stored.
-3. Click **Run Judge Demo** to execute `VERIFIED → BLOCKED → FROZEN`.
-4. Change **Max premium** and **Min liquidity** to see the decision change.
-5. Expand the receipt and click **Verify evidence**.
-6. Inspect the raw/scaled amount guard in the fourth scenario.
-7. Click **Verify Devnet proof** to independently check the committed Solana transaction evidence.
-8. Select `FROZEN` in Judge Mode and use the recovery controls to re-verify or cancel without signing.
-9. Switch between **Strict**, **Balanced**, and **Flexible** policy presets to show that the same quote can produce a different decision under a user-owned policy.
-10. Refresh the page and confirm the browser-local policy, latest task, receipt, wallet replay state, and audit trail are restored.
-11. Open **Integration Status** and click **Check deployment**. The public API reports its real configuration state; without a remote store it says `PERSISTENCE_NOT_CONFIGURED` instead of pretending that Vercel's ephemeral filesystem is durable.
-12. Download the latest portable receipt as JSON.
+1. Open the [Live Demo](https://openbell-solana-live.vercel.app/) and scroll to **Live Production Proof**.
+2. Click **Run Live Judge Task**. The restricted route performs `Jupiter observation → Ed25519 policy → Redis create → strict evaluation → Redis read-back → notification read-back`.
+3. Copy the returned task ID or evidence hash and expand the sanitized JSON. The route is fixed to AAPLx, capped at $10, rate-limited, and has settlement permission disabled.
+4. Run **Deterministic Failure Matrix** to reproduce `VERIFIED → BLOCKED → FROZEN` separately. These are fixtures and are never presented as live market failures.
+5. Change **Max premium** and **Min liquidity** to see the same quote re-evaluated under a different user policy.
+6. Click **Verify latest receipt** to recompute the evidence hash in the browser.
+7. Load the Mainnet AAPLx Mint/Jupiter evidence and independently inspect the committed Devnet transaction proof.
+8. Review **Integration Status**, then open the SDK/API example below.
 
 ## Local verification
 
@@ -27,11 +23,39 @@ OpenBell protects users and trading agents from stale prices, thin liquidity, of
 npm test
 npm run demo
 npm run sdk:demo
+npm run partner:demo
 ```
 
 ## Integrate OpenBell
 
-OpenBell v0.3 exposes an embeddable SDK, Ed25519-signed policy envelopes, pluggable task stores, persistent audit history, an optional HMAC-signed Webhook notifier, a local REST API, and a fail-closed Vercel task API:
+OpenBell v0.4 exposes an embeddable SDK, a server-side HTTP client, TypeScript declarations, Ed25519-signed policy envelopes, pluggable task stores, persistent audit history, an optional HMAC-signed Webhook notifier, a local REST API, and a fail-closed Vercel task API.
+
+The package is not yet published to npm. Install the reviewed GitHub source explicitly:
+
+```bash
+npm install github:0xCaptain888/openbell-solana#main
+```
+
+Five-minute server integration:
+
+```js
+import { createOpenBellApiClient } from 'openbell-solana/api-client';
+
+const openbell = createOpenBellApiClient({
+  baseUrl: 'https://openbell-solana-live.vercel.app/api/openbell',
+  token: process.env.OPENBELL_API_BEARER_TOKEN // server only
+});
+
+const task = await openbell.createTask({ intent, policyEnvelope }, {
+  idempotencyKey: `my-agent:${orderId}`
+});
+const decision = await openbell.evaluateTask(task.taskId, observation);
+if (decision.state !== 'VERIFIED') return; // never build the trade
+```
+
+The complete partner example is in [`examples/trading-agent`](examples/trading-agent), API semantics are defined in [`docs/openapi.yaml`](docs/openapi.yaml), and operational details are in [`docs/integration.md`](docs/integration.md).
+
+For local development:
 
 ```bash
 OPENBELL_POLICY_MODE=development npm run api
@@ -134,11 +158,13 @@ function configuration for a Vercel deployment.
 
 The core engine has no runtime dependencies and is deterministic. `src/openbell.mjs` is designed so a live Solana adapter can replace the fixture quote/reference adapters without changing the verifier contract.
 
-### Optional persistent Vercel task API
+### Persistent Vercel task API
 
 `GET /api/openbell?action=status` is public and returns configuration metadata only. All task and notification reads/writes require a server-side bearer token. The endpoint refuses task operations until a remote Redis REST store is configured, and strict mode rejects policies that are not signed by a configured trusted key.
 
-Supported actions are `tasks`, `task`, `notifications`, `create`, `evaluate`, `recover`, `cancel`, and `settle`. Secrets are server-side environment variables only; the public browser never receives the database token, API bearer token, trusted signer configuration, or notification secret. Exact setup and request examples are in [`docs/integration.md`](docs/integration.md).
+Supported actions are `tasks`, `task`, `notifications`, `create`, `evaluate`, `recover`, `cancel`, and `settle`. Task listing supports bounded cursor pagination and create supports `x-idempotency-key`. Secrets are server-side environment variables only; the public browser never receives the database token, API bearer token, trusted signer configuration, or notification secret.
+
+`POST /api/judge-run` is a separate public proof endpoint. It accepts no custom asset, amount, policy, wallet, or settlement request. It observes a read-only Jupiter AAPLx route, signs a five-minute evaluate-only policy with an isolated runtime key, writes and reads the task through Redis, returns the matching receipt and notifications, and enforces an idempotency key plus a 20-second creation boundary. It never exposes the operator token or signing material.
 
 ### Recorded production task proof
 
@@ -165,6 +191,7 @@ transaction or tokenized-stock trade.
 - Browser-local persistence is explicitly labeled and survives refresh on the same device. It is not claimed as shared cloud persistence.
 - The deployed task API exposes a public configuration check while task operations remain fail-closed behind remote storage, bearer authorization, and trusted policy signer configuration.
 - A sanitized production smoke proof records a successful authorized task write, strict-policy evaluation, Redis read-back, and notification creation.
+- The public Live Judge Run creates a new restricted production task without revealing an operator credential; it cannot settle, build a transaction, or move funds.
 - A production adapter must provide live issuer/mint metadata, oracle/reference prices, DEX/RFQ quotes, and Solana transaction signatures.
 - Tokenized-stock availability and eligibility vary by jurisdiction and issuer. This prototype does not bypass KYC, transfer controls, or regional restrictions.
 
@@ -176,6 +203,7 @@ transaction or tokenized-stock trade.
 
 - `src/openbell.mjs` — verifier, decision states, deterministic evidence receipt
 - `src/sdk.mjs` — embeddable task lifecycle SDK and fail-closed settlement gate
+- `src/api-client.mjs` — server integration client plus credential-free restricted Judge Run client
 - `src/policy.mjs` — Ed25519 policy signing, verification, and scoped permissions
 - `src/task-store.mjs` — memory and atomic JSON persistence adapters
 - `src/redis-rest-task-store.mjs` — remote Redis REST persistence adapter for serverless deployments
@@ -183,7 +211,10 @@ transaction or tokenized-stock trade.
 - `src/demo.mjs` — CLI judge fixtures
 - `scripts/api-server.mjs` — local persistent REST service
 - `api/openbell.mjs` — fail-closed Vercel task API and public deployment-status endpoint
+- `api/judge-run.mjs` — fixed-scope, rate-limited production proof endpoint
+- `examples/trading-agent/` — third-party SDK integration boundary
 - `site/` — evaluator-facing browser demo
 - `test/` — verified, blocked, frozen, and raw/scaled regression tests
 - `docs/architecture.md` — one-page architecture
 - `docs/integration.md` — SDK/API integration and operations guide
+- `docs/openapi.yaml` — OpenAPI 3.1 contract

@@ -1,6 +1,16 @@
 # OpenBell SDK and API integration
 
-OpenBell v0.3 turns the verifier prototype into an embeddable execution-control layer. The SDK remains fail-closed: a task cannot reach `SETTLED` unless a valid Ed25519 policy authorizes settlement, the quote reaches `VERIFIED`, and a successful transaction proof is attached.
+OpenBell v0.4 turns the verifier into an embeddable execution-control layer with a typed package surface and a hosted HTTP client. The SDK remains fail-closed: a task cannot reach `SETTLED` unless a valid Ed25519 policy authorizes settlement, the quote reaches `VERIFIED`, and a successful transaction proof is attached.
+
+## Installation status
+
+OpenBell is not currently published to npm. Install the GitHub source or pin a reviewed commit:
+
+```bash
+npm install github:0xCaptain888/openbell-solana#main
+```
+
+The package exports `openbell-solana`, `openbell-solana/policy`, and `openbell-solana/api-client`, with TypeScript declarations for the SDK and HTTP client.
 
 ## SDK quick start
 
@@ -56,7 +66,28 @@ Run the complete SDK example:
 
 ```bash
 npm run sdk:demo
+npm run partner:demo
 ```
+
+## Hosted API client
+
+Use the API client only from a trusted backend because the general task API requires an operator token:
+
+```js
+import { createOpenBellApiClient } from 'openbell-solana/api-client';
+
+const client = createOpenBellApiClient({
+  baseUrl: 'https://openbell-solana-live.vercel.app/api/openbell',
+  token: process.env.OPENBELL_API_BEARER_TOKEN
+});
+
+const created = await client.createTask({ intent, policyEnvelope }, {
+  idempotencyKey: `partner-order:${orderId}`
+});
+const evaluated = await client.evaluateTask(created.taskId, observation);
+```
+
+Never place `OPENBELL_API_BEARER_TOKEN` in browser JavaScript. Browser demos may call only the fixed-scope `/api/judge-run` route, which accepts no trade parameters and has no settlement permission.
 
 ## Persistent task service
 
@@ -115,6 +146,24 @@ POST /api/openbell?action=recover&taskId=<id>
 POST /api/openbell?action=cancel&taskId=<id>
 POST /api/openbell?action=settle&taskId=<id>
 ```
+
+`GET action=tasks` accepts `limit` (1-100) and an opaque `cursor`, returning `nextCursor`. `POST action=create` accepts an optional `x-idempotency-key` (8-96 safe characters); a repeated key returns the existing task instead of creating a duplicate.
+
+The machine-readable contract is [`openapi.yaml`](openapi.yaml).
+
+## Restricted Live Judge Run
+
+The deployed Demo uses a distinct credential-free proof route:
+
+```text
+POST /api/judge-run
+x-idempotency-key: judge-browser-<uuid>
+content-type: application/json
+
+{"consent":true}
+```
+
+Its scope is immutable: AAPLx only, $10 maximum, evaluate permission only, five-minute policy expiry, no recovery or settlement permission, no transaction construction, and no wallet signing. It binds a live read-only Jupiter route observation into a strict signed-policy evaluation, then returns the Redis read-back and task-specific notification records. The response explicitly separates route price-impact normalization from an equity fair-value claim.
 
 If remote storage is absent, task operations return `503 PERSISTENCE_NOT_CONFIGURED`. If the operator bearer token is absent, they return `503 WRITE_AUTH_NOT_CONFIGURED`. A wrong token returns `401 UNAUTHORIZED`. No endpoint silently falls back to process memory or the Vercel filesystem.
 
